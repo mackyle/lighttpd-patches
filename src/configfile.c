@@ -113,6 +113,7 @@ static int config_insert(server *srv) {
 		{ "mimetype.xattr-name",               NULL, T_CONFIG_STRING,  T_CONFIG_SCOPE_SERVER     }, /* 69 */
 		{ "server.listen-backlog",             NULL, T_CONFIG_INT,     T_CONFIG_SCOPE_CONNECTION }, /* 70 */
 		{ "server.error-handler-404",          NULL, T_CONFIG_STRING,  T_CONFIG_SCOPE_CONNECTION }, /* 71 */
+		{ "ssl.cadn-file",                     NULL, T_CONFIG_STRING,  T_CONFIG_SCOPE_CONNECTION }, /* 72 */
 
 		{ "server.host",
 			"use server.bind instead",
@@ -193,6 +194,7 @@ static int config_insert(server *srv) {
 		s->server_name   = buffer_init();
 		s->ssl_pemfile   = buffer_init();
 		s->ssl_ca_file   = buffer_init();
+		s->ssl_cadn_file = buffer_init();
 		s->error_handler = buffer_init();
 		s->error_handler_404 = buffer_init();
 		s->server_tag    = buffer_init();
@@ -291,6 +293,7 @@ static int config_insert(server *srv) {
 		cv[67].destination = &(s->ssl_empty_fragments);
 		cv[70].destination = &(s->listen_backlog);
 		cv[71].destination = s->error_handler_404;
+		cv[72].destination = s->ssl_cadn_file;
 
 		srv->config_storage[i] = s;
 
@@ -431,6 +434,7 @@ int config_setup_connection(server *srv, connection *con) {
 	PATCH(ssl_pemfile_pkey);
 #endif
 	PATCH(ssl_ca_file);
+	PATCH(ssl_cadn_file);
 #ifdef USE_OPENSSL
 	PATCH(ssl_ca_file_cert_names);
 #endif
@@ -506,6 +510,11 @@ int config_patch_connection(server *srv, connection *con) {
 #endif
 			} else if (buffer_is_equal_string(du->key, CONST_STR_LEN("ssl.ca-file"))) {
 				PATCH(ssl_ca_file);
+#ifdef USE_OPENSSL
+				PATCH(ssl_ca_file_cert_names);
+#endif
+			} else if (buffer_is_equal_string(du->key, CONST_STR_LEN("ssl.cadn-file"))) {
+				PATCH(ssl_cadn_file);
 #ifdef USE_OPENSSL
 				PATCH(ssl_ca_file_cert_names);
 #endif
